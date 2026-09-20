@@ -453,7 +453,7 @@ class CMakeBuilder(cmake.CMakeBuilder):
         cmake_args = [
             self.define_from_variant("QE_ENABLE_MPI", "mpi"),
             self.define_from_variant("QE_ENABLE_OPENMP", "openmp"),
-            self.define_from_variant("QE_ENABLE_SCALAPACK", "scalapack"),
+            self.define_from_variant("QE_ENABLE_PACK", "pack"),
             self.define_from_variant("QE_ENABLE_ELPA", "elpa"),
             self.define_from_variant("QE_ENABLE_LIBXC", "libxc"),
             self.define_from_variant("QE_ENABLE_CUDA", "cuda"),
@@ -487,12 +487,15 @@ class CMakeBuilder(cmake.CMakeBuilder):
             else:
                 plugins.append("pw2qmcpack")
 
-        if "^armpl-gcc" in spec or "^acfl" in spec:
+        if "^armpl-gcc" in spec or "^acfl" in spec or "^cray-libsci" in spec:
             cmake_args.append(self.define("BLAS_LIBRARIES", spec["blas"].libs.joined(";")))
             cmake_args.append(self.define("LAPACK_LIBRARIES", spec["lapack"].libs.joined(";")))
-            # Up to q-e@7.1 set BLA_VENDOR to All to force detection of vanilla scalapack
+            # Up to q-e@7.1 set BLA_VENDOR to All to force detection of vanilla pack
             if spec.satisfies("@:7.1"):
                 cmake_args.append(self.define("BLA_VENDOR", "All"))
+        # Cray-libsci also provides Scalapack.
+        if "^cray-libsci" in spec:
+            cmake_args.append(self.define("SCALAPACK_LIBRARIES", spec["scalapack"].libs.joined(";")))
 
         if plugins:
             cmake_args.append(self.define("QE_ENABLE_PLUGINS", plugins))
@@ -528,7 +531,7 @@ class GenericBuilder(generic.GenericBuilder):
         if "+openmp" in spec:
             options.append("--enable-openmp")
 
-        # QE external BLAS, FFT, SCALAPACK detection is a bit tricky.
+        # QE external BLAS, FFT, PACK detection is a bit tricky.
         # More predictable to pass in the correct link line to QE.
         # If external detection of BLAS, LAPACK and FFT fails, QE
         # is supposed to revert to internal versions of these libraries
