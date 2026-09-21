@@ -29,7 +29,9 @@ class Swiftsim(AutotoolsPackage):
     version("0.9.0", sha256="11eab2dc48f94ad0774140b4090c74342cc614326ab20aa8aa492207235c402e")
 
     variant("mpi", default=True, description="Enable distributed memory parallelism")
-    variant("fftw", default=True, description="Enable FFTW support, used for perioodic gravity forces.")
+    variant(
+        "fftw", default=True, description="Enable FFTW support, used for perioodic gravity forces."
+    )
 
     depends_on("c", type="build")  # generated
 
@@ -55,8 +57,10 @@ class Swiftsim(AutotoolsPackage):
             "--enable-compiler-warnings=yes",
         ]
         args.extend(self.enable_or_disable("mpi"))
-        args.extend(self.with_or_without("fftw",activation_value=lambda x: self.spec["fftw-api"].prefix))
-        
+        args.extend(
+            self.with_or_without("fftw", activation_value=lambda x: self.spec["fftw-api"].prefix)
+        )
+
         # Vector code doesnt support aarch64.
         if self.spec.satisfies("target=aarch64:"):
             args.append("--disable-vec")
